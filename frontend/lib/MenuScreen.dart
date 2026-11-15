@@ -1,3 +1,4 @@
+import 'package:frontend/pages/PhotoBook.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MenuScreen extends StatelessWidget {
@@ -23,7 +24,9 @@ class MenuScreen extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                print("Button Clicked!");
+                // Moves to the next page
+                // Recently .push adds to scene, .pop removes (ie goes back to prev screen)
+                Navigator.push(context, MaterialPageRoute(builder: (context) => PhotoBook()));
               },
               child: Image.asset(
                 'assets/images/start_button.png',

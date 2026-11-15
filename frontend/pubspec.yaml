@@ -31,6 +31,8 @@ dependencies:
   flutter:
     sdk: flutter
   material_ui: ^1.1.0
+  turnable_page: ^1.1.0
+  
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -46,19 +48,49 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
+
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/temp_splash.png
+  fullscreen: true
+  
+  android: true
+  image_android: assets/images/temp_splash.png
+  
+  ios: true
+  image_ios: assets/images/temp_splash.png
+
+
+  android_12:
+    
+    color: "#ffffff"
+
+    image: assets/images/temp_splash.png
+    icon_background_color: "#ffffff"
+
+
 flutter:
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  fonts:
+    - family: Omori
+      fonts:
+      - asset: fonts/omori.ttf
+
   assets:     
     - assets/images/
+    - assets/images/random_scribbles/
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
