@@ -1,0 +1,8 @@
+{
+  "name": "album-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "r2_buckets": [
+    { "binding": "PHOTOS", "bucket_name": "album-photos" }
+  ]
+}

@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:frontend/data/photo_repository.dart';
 
 
 class UploadPhotos extends StatefulWidget {
@@ -17,19 +18,26 @@ class UploadPhotos extends StatefulWidget {
 class _UploadPhotos extends State<UploadPhotos> {
   final _picker = ImagePicker();
   final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
   File? _image;
   DateTime _date = DateTime.now();
+  bool _saving = false;
 
   @override
   void dispose() {
+    _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1600,
+      imageQuality: 80,
+    );
 
     if(pickedFile != null) {
       _image = File(pickedFile.path);
@@ -49,21 +57,35 @@ class _UploadPhotos extends State<UploadPhotos> {
     setState(() => _date = picked);
   }
 
-  void _save() {
-    if (_image == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Select a photo!"),)
-      );
-    }
-
-    if (!_formKey.currentState!.validate()) return;
-
-    final description = _descriptionController.text.trim();
-
-    debugPrint('Saving ${_image!.path} | $description | $_date');
-
-    Navigator.pop(context);
+Future<void> _save() async {
+  if (_image == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Select a photo!")),
+    );
+    return; // this return was missing, so _image! below would crash
   }
+
+  if (!_formKey.currentState!.validate()) return;
+
+  setState(() => _saving = true);
+  try {
+    await photoRepository.addPhoto(
+      imagePath: _image!.path,
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      date: _date,
+    );
+    if (!mounted) return;
+    Navigator.pop(context);
+  } catch (e) {
+    debugPrint('Upload error: $e');
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Upload failed. Check your connection.')),
+    );
+  }
+}
 
 
   @override
@@ -103,6 +125,20 @@ class _UploadPhotos extends State<UploadPhotos> {
               SizedBox(height: 24,),
 
               TextFormField(
+                controller: _titleController,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                ),
+
+                validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Please enter a title'
+                  : null,
+              ),
+
+              SizedBox(height: 16,),
+
+              TextFormField(
                 controller: _descriptionController,
                 maxLines: 3,
                 maxLength: 200,
@@ -130,8 +166,14 @@ class _UploadPhotos extends State<UploadPhotos> {
 
               SizedBox(height: 24,),
               ElevatedButton(
-                onPressed: _save, 
-                child: Text('Save'),
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save'),
               )
             ],
           ),

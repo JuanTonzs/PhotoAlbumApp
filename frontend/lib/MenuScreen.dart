@@ -14,7 +14,7 @@ class MenuScreen extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/temp_background.jpg"),
+            image: AssetImage("assets/images/test_bg.gif"),
             fit: BoxFit.cover,
           )
         ),    
@@ -24,35 +24,42 @@ class MenuScreen extends StatelessWidget {
           spacing: 0,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            GestureDetector(
-              onTap: () {
-                // Moves to the next page
-                // Recently .push adds to scene, .pop removes (ie goes back to prev screen)
-                Navigator.push(context, MaterialPageRoute(builder: (context) => PhotoBook()));
-              },
-              child: Image.asset(
-                'assets/images/start_button.png',
-                width: 400,
-                height: 400,
-                fit: BoxFit.contain
+            _MenuButton(
+              asset: 'assets/images/start_button.png',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PhotoBook()),
               ),
             ),
-
-            GestureDetector(
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => UploadPhotos()));
-              },
-              child: Image.asset(
-                'assets/images/upload_button.png',
-                width: 225,
-                height: 225,
-                fit: BoxFit.contain
+            _MenuButton(
+              asset: 'assets/images/upload_button.png',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UploadPhotos()),
               ),
             ),
-            
           ],
         ),
       ),
+    );
+  }
+}
+
+class _MenuButton extends StatelessWidget {
+  const _MenuButton({required this.asset, required this.onTap});
+
+  final String asset;
+  final VoidCallback onTap;
+
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width * 0.7;
+
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Image.asset(asset, width: width, fit: BoxFit.fitWidth,),
     );
   }
 }

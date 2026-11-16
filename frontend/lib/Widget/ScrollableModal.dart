@@ -8,16 +8,22 @@ class ScrollableModal extends StatelessWidget {
   const ScrollableModal({ 
     super.key,
     required this.image,
-    required this.description
+    required this.title,
+    required this.description,
+    required this.date,
   });
 
   final ImageProvider image;
+  final String title;
   final String description;
+  final String date;
 
   static Future<void> show(
     BuildContext context, {
       required ImageProvider image,
+      required String title,
       required String description,
+      required String date,
     }
   ) {
     return showModalBottomSheet<void>(
@@ -28,7 +34,9 @@ class ScrollableModal extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       builder: (_) => ScrollableModal(
         image: image,
+        title: title,
         description: description,
+        date: date
       )
     );
   }
@@ -51,6 +59,9 @@ class ScrollableModal extends StatelessWidget {
               width: 2.0,
             ),
           ),
+
+
+
           child: ListView(
             controller: controller,
             padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -61,6 +72,30 @@ class ScrollableModal extends StatelessWidget {
                 image: image,
                 fit: BoxFit.contain,
               ),
+              const SizedBox(height: 16,),
+
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Omori'
+                ),
+              ),
+
+
+              const SizedBox(height: 16,),
+
+              Text(
+                date,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 25,
+                  fontFamily: 'Omori'
+                ),
+              ),
+
 
               const SizedBox(height: 16,),
               Text(

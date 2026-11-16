@@ -1,14 +1,11 @@
+import 'package:frontend/Widget/Polaroid.dart';
 import 'package:frontend/Widget/ScrollableModal.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:turnable_page/turnable_page.dart';
+import 'package:frontend/data/photo_repository.dart';
+
 import 'dart:math';
 
-class AlbumPhoto {
-  const AlbumPhoto( {required this.imageUrl, required this.description} );
-
-  final String imageUrl;
-  final String description;
-}
 
 
 class PhotoBook extends StatefulWidget {
@@ -23,36 +20,25 @@ class _PhotoBook extends State<PhotoBook> {
   static const _photosPerPage = 3;
 
 
-
-    // TODO: TEMP, THIS WILL BE IMAGES FROM LIKE A DATABASE OR SMTH
-  final List<AlbumPhoto> photoArray = [
-    AlbumPhoto(
-      imageUrl: 'https://images.pexels.com/photos/17259379/pexels-photo-17259379.jpeg',
-      description: 'A beautiful landscape',
-      ),
-    AlbumPhoto(
-      imageUrl: 'https://images.pexels.com/photos/17259379/pexels-photo-17259379.jpeg',
-      description: 'A beautiful landscape',
-      ),
-  ];
-
-  int get _pageCount => (photoArray.length / _photosPerPage).ceil();
-
-
-  List<AlbumPhoto> _photosForPage(int pageIndex) {
+  List<AlbumPhoto> _photosForPage(List<AlbumPhoto> all, int pageIndex) {
     final start = pageIndex * _photosPerPage;
-    if (start >= photoArray.length) return [];
-    final end = min(start + _photosPerPage, photoArray.length);
-    return photoArray.sublist(start, end);
+    if (start >= all.length) return [];
+    return all.sublist(start, min(start + _photosPerPage, all.length));
   }
+
+  final _photosFuture = photoRepository.getPhotos();
+
+
 
   void _openModal(AlbumPhoto photo) {
-    ScrollableModal.show(
-      context,
-      image: NetworkImage(photo.imageUrl),
-      description: photo.description
-    );
-  }
+  ScrollableModal.show(
+    context,
+    image: imageProviderFor(photo.imageUrl),
+    title: photo.title,
+    description: photo.description,
+    date: MaterialLocalizations.of(context).formatMediumDate(photo.date),
+  );
+}
   
 
 
@@ -85,23 +71,38 @@ class _PhotoBook extends State<PhotoBook> {
         
         ),
 
-        child: LayoutBuilder(
-          builder: (content, box) => TurnablePage(
-            pageCount: _pageCount, // Change to be more dynamic
-            pageViewMode: PageViewMode.auto,
-            paperBoundaryDecoration: PaperBoundaryDecoration.none,
-            aspectRatio: box.maxWidth / box.maxHeight,
-            builder: (context, pageIndex, constraints) => AlbumPage(
-              pageIndex: pageIndex,
-              photos: _photosForPage(pageIndex),
-              onPhotoTap: _openModal,
-            ),
-          ),
-        
-        )
+        child:  FutureBuilder<List<AlbumPhoto>>(
+  future: _photosFuture,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState != ConnectionState.done) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (snapshot.hasError) {
+      debugPrint('Load error: ${snapshot.error}');
+      return const Center(child: Text('Could not load photos'));
+    }
+    final photos = snapshot.data!;
+    if (photos.isEmpty) {
+      return const Center(child: Text('No photos yet. Tap Upload!'));
+    }
 
+    return LayoutBuilder(
+      builder: (context, box) => TurnablePage(
+        pageCount: (photos.length / _photosPerPage).ceil(),
+        pageViewMode: PageViewMode.auto,
+        paperBoundaryDecoration: PaperBoundaryDecoration.none,
+        aspectRatio: box.maxWidth / box.maxHeight,
+        builder: (context, pageIndex, constraints) => AlbumPage(
+          pageIndex: pageIndex,
+          photos: _photosForPage(photos, pageIndex),
+          onPhotoTap: _openModal,
+        ),
       ),
     );
+    },
+  ),
+),
+);
   }
 }
 
@@ -143,6 +144,7 @@ class AlbumPage extends StatelessWidget {
   final int pageIndex;
   final List<AlbumPhoto> photos;
   final void Function(AlbumPhoto photo) onPhotoTap;
+  
 
   @override
   Widget build(BuildContext context) {
@@ -166,7 +168,7 @@ class AlbumPage extends StatelessWidget {
       padding: EdgeInsets.all(14),
       child: LayoutBuilder(
         builder: (context, box) {
-          final unit = min(box.maxWidth, box.maxHeight / 1.4);
+          final unit = min(box.maxWidth, box.maxHeight * 0.55);
 
           Widget place(_Slot s, Widget child) => Align(
             alignment: Alignment(s.x * flip, s.y),
@@ -180,40 +182,24 @@ class AlbumPage extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               for (var i = 0; i < photos.length; i++) 
-                Align(
-                  alignment: Alignment(_textSlots[i].x * flip, _textSlots[i].y),
-                  child: Transform.rotate(
-                    angle: _textSlots[i].angle * flip,
-                    child: SizedBox(
-                      width: unit * _textSlots[i].width,
-                      child: Image.asset(
-                        'assets/images/random_scribbles/random_scribble_${Random().nextInt(6) + 1}.png',
-                        fit: BoxFit.contain,
-                      ),
+                place(
+                    _textSlots[i],
+                    Image.asset(
+                      // Same seed = same scribble every time this page is built
+                      'assets/images/random_scribbles/random_scribble_${Random(pageIndex * 10 + i).nextInt(6) + 1}.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
-                ),
+      
               
               for (var i = 0; i < photos.length; i++) 
-                Align(
-                  alignment: Alignment(_photoSlots[i].x * flip, _photoSlots[i].y),
-                  child: Transform.rotate(
-                    angle: _photoSlots[i].angle * flip,
-                    child: GestureDetector(
-                      onTap: () => onPhotoTap(photos[i]),
-                      child: SizedBox(
-                        width: unit * _photoSlots[i].width,
-                        child: AspectRatio(
-                          aspectRatio: 0.82,
-                          child: Image.network(
-                            photos[i].imageUrl,
-                            fit:BoxFit.cover
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                )
+               place(
+                _photoSlots[i],
+                GestureDetector(
+                  onTap: () => onPhotoTap(photos[i]),
+                  child: Polaroid(imageUrl: photos[i].imageUrl),
+                ),
+              ),
               
             ],
           );
