@@ -25,14 +25,16 @@ class _PhotoBook extends State<PhotoBook> {
 
 
     // TODO: TEMP, THIS WILL BE IMAGES FROM LIKE A DATABASE OR SMTH
-  final List<AlbumPhoto> photoArray = List.generate(
-    7,
-    (i) => AlbumPhoto(
-      imageUrl:
-          'https://images.pexels.com/photos/17259379/pexels-photo-17259379.jpeg',
-      description: 'A beautiful landscape ${i + 1}',
-    ),
-  );
+  final List<AlbumPhoto> photoArray = [
+    AlbumPhoto(
+      imageUrl: 'https://images.pexels.com/photos/17259379/pexels-photo-17259379.jpeg',
+      description: 'A beautiful landscape',
+      ),
+    AlbumPhoto(
+      imageUrl: 'https://images.pexels.com/photos/17259379/pexels-photo-17259379.jpeg',
+      description: 'A beautiful landscape',
+      ),
+  ];
 
   int get _pageCount => (photoArray.length / _photosPerPage).ceil();
 
@@ -74,7 +76,7 @@ class _PhotoBook extends State<PhotoBook> {
 
       body: Container(
         alignment: Alignment.center,
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           image: DecorationImage(
             image: AssetImage("assets/images/temp_background.jpg"),
@@ -83,16 +85,20 @@ class _PhotoBook extends State<PhotoBook> {
         
         ),
 
-        child: TurnablePage(
-          pageCount: _pageCount, // Change to be more dynamic
-
-          pageViewMode: PageViewMode.auto,
-          builder: (context, pageIndex, constraints) => AlbumPage(
-            pageIndex: pageIndex,
-            photos: _photosForPage(pageIndex),
-            onPhotoTap: _openModal,
+        child: LayoutBuilder(
+          builder: (content, box) => TurnablePage(
+            pageCount: _pageCount, // Change to be more dynamic
+            pageViewMode: PageViewMode.auto,
+            paperBoundaryDecoration: PaperBoundaryDecoration.none,
+            aspectRatio: box.maxWidth / box.maxHeight,
+            builder: (context, pageIndex, constraints) => AlbumPage(
+              pageIndex: pageIndex,
+              photos: _photosForPage(pageIndex),
+              onPhotoTap: _openModal,
+            ),
           ),
-        ),
+        
+        )
 
       ),
     );
@@ -181,7 +187,7 @@ class AlbumPage extends StatelessWidget {
                     child: SizedBox(
                       width: unit * _textSlots[i].width,
                       child: Image.asset(
-                        'assets/images/random_scribbles/random_scribbles1.png',
+                        'assets/images/random_scribbles/random_scribble_${Random().nextInt(6) + 1}.png',
                         fit: BoxFit.contain,
                       ),
                     ),

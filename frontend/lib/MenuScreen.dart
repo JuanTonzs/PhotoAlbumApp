@@ -1,4 +1,5 @@
 import 'package:frontend/pages/PhotoBook.dart';
+import 'package:frontend/pages/UploadPhotos.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MenuScreen extends StatelessWidget {
@@ -19,8 +20,9 @@ class MenuScreen extends StatelessWidget {
         ),    
         
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          spacing: 0,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
               onTap: () {
@@ -35,6 +37,19 @@ class MenuScreen extends StatelessWidget {
                 fit: BoxFit.contain
               ),
             ),
+
+            GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => UploadPhotos()));
+              },
+              child: Image.asset(
+                'assets/images/upload_button.png',
+                width: 225,
+                height: 225,
+                fit: BoxFit.contain
+              ),
+            ),
+            
           ],
         ),
       ),

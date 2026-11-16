@@ -1,5 +1,6 @@
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:frontend/MenuScreen.dart';
+import 'package:frontend/Themes/theme.dart';
 import 'package:material_ui/material_ui.dart';
 
 
@@ -17,6 +18,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: MenuScreen(),
+      theme: buildAlbumTheme(),
     );
   }
 }
