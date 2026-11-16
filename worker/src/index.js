@@ -47,6 +47,26 @@ export default {
       });
     }
 
+    if (request.method === 'PATCH' && path.length === 2) {
+      const existing = await env.PHOTOS.get(path[1]);
+      if (!existing) return new Response('Not found', { status: 404 });
+
+      const changes = await request.json();
+      const meta = { ...existing.customMetadata };
+      for (const field of ['title', 'description', 'date']) {
+        if (typeof changes[field] === 'string') meta[field] = changes[field];
+      }
+
+      // Read the whole file first, then write it back with the new metadata
+      const data = await existing.arrayBuffer();
+      await env.PHOTOS.put(path[1], data, {
+        httpMetadata: existing.httpMetadata,
+        customMetadata: meta,
+      });
+
+      return Response.json({ id: path[1] });
+    }
+
     // DELETE /photos/:id
     if (request.method === 'DELETE' && path.length === 2) {
       await env.PHOTOS.delete(path[1]);
@@ -54,5 +74,6 @@ export default {
     }
 
     return new Response('Not found', { status: 404 });
+
   },
 };

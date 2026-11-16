@@ -25,12 +25,22 @@ class AlbumPhoto {
 abstract class PhotoRepository {
   Future<List<AlbumPhoto>> getPhotos();
 
+  Future<void> updatePhoto({
+    required String id,
+    required String title,
+    required String description,
+    required DateTime date,
+  });
+
   Future<void> addPhoto({
     required String imagePath,
     required String title,
     required String description,
     required DateTime date,
   });
+
+
+  Future<void> deletePhoto(String id);
 }
 
 class CloudPhotoRepository implements PhotoRepository {
@@ -48,6 +58,9 @@ class CloudPhotoRepository implements PhotoRepository {
     if (res.statusCode != 200) {
       throw Exception('Could not load photos (${res.statusCode})');
     }
+
+
+
 
     final list = jsonDecode(res.body) as List;
     return list
@@ -90,6 +103,43 @@ class CloudPhotoRepository implements PhotoRepository {
       throw Exception('Upload failed (${res.statusCode})');
     }
   }
+
+
+  @override
+  Future<void> deletePhoto(String id) async {
+    final res = await http
+        .delete(Uri.parse('${Config.apiBase}/photos/$id'), headers: _auth)
+        .timeout(_timeout);
+
+    if (res.statusCode != 204) {
+      throw Exception('Delete failed (${res.statusCode})');
+    }
+  }
+
+  
+    @override
+    Future<void> updatePhoto({
+      required String id,
+      required String title,
+      required String description,
+      required DateTime date,
+    }) async {
+      final res = await http
+          .patch(
+            Uri.parse('${Config.apiBase}/photos/$id'),
+            headers: {..._auth, 'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'title': title,
+              'description': description,
+              'date': date.toIso8601String(),
+            }),
+          )
+          .timeout(_timeout);
+
+      if (res.statusCode != 200) {
+        throw Exception('Update failed (${res.statusCode})');
+      }
+    }
 }
 
 // One shared instance for the whole app.

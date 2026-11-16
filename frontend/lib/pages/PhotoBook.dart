@@ -3,6 +3,7 @@ import 'package:frontend/Widget/ScrollableModal.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:turnable_page/turnable_page.dart';
 import 'package:frontend/data/photo_repository.dart';
+import 'package:frontend/pages/EditPhoto.dart';
 
 import 'dart:math';
 
@@ -26,10 +27,16 @@ class _PhotoBook extends State<PhotoBook> {
     return all.sublist(start, min(start + _photosPerPage, all.length));
   }
 
-  final _photosFuture = photoRepository.getPhotos();
+  Future<List<AlbumPhoto>> _photosFuture = photoRepository.getPhotos();
 
+  int _version = 0;
 
-
+  void _reload() {
+    setState(() {
+      _photosFuture = photoRepository.getPhotos();
+      _version++;
+    });
+  }
   void _openModal(AlbumPhoto photo) {
   ScrollableModal.show(
     context,
@@ -37,9 +44,58 @@ class _PhotoBook extends State<PhotoBook> {
     title: photo.title,
     description: photo.description,
     date: MaterialLocalizations.of(context).formatMediumDate(photo.date),
+    onEdit: () => _editPhoto(photo),
+    onDelete: () => _deletePhoto(photo),
   );
 }
+
+Future<void> _editPhoto(AlbumPhoto photo) async {
+  final changed = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(builder: (_) => EditPhoto(photo: photo)),
+  );
+  if (changed == true && mounted) _reload();
+}
+
+
   
+Future<void> _deletePhoto(AlbumPhoto photo) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: Colors.black,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+        side: BorderSide(color: Colors.white, width: 2),
+      ),
+      title: const Text('Delete this photo?'),
+      content: Text('"${photo.title}" will be removed for good.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  try {
+    await photoRepository.deletePhoto(photo.id);
+    if (!mounted) return;
+    _reload();
+  } catch (e) {
+    debugPrint('Delete error: $e');
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not delete. Check your connection.')),
+    );
+  }
+}
 
 
   @override
@@ -88,6 +144,7 @@ class _PhotoBook extends State<PhotoBook> {
 
     return LayoutBuilder(
       builder: (context, box) => TurnablePage(
+        key: ValueKey(_version),
         pageCount: (photos.length / _photosPerPage).ceil(),
         pageViewMode: PageViewMode.auto,
         paperBoundaryDecoration: PaperBoundaryDecoration.none,

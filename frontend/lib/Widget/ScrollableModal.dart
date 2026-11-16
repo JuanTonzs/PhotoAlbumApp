@@ -11,12 +11,16 @@ class ScrollableModal extends StatelessWidget {
     required this.title,
     required this.description,
     required this.date,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   final ImageProvider image;
   final String title;
   final String description;
   final String date;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   static Future<void> show(
     BuildContext context, {
@@ -24,6 +28,8 @@ class ScrollableModal extends StatelessWidget {
       required String title,
       required String description,
       required String date,
+      required VoidCallback onEdit,
+      required VoidCallback onDelete,
     }
   ) {
     return showModalBottomSheet<void>(
@@ -36,7 +42,9 @@ class ScrollableModal extends StatelessWidget {
         image: image,
         title: title,
         description: description,
-        date: date
+        date: date,
+        onEdit: onEdit,
+        onDelete: onDelete,
       )
     );
   }
@@ -107,7 +115,29 @@ class ScrollableModal extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: 24,)
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    tooltip: 'Edit photo',
+                    onPressed: () {
+                      Navigator.pop(context); // close the sheet
+                      onEdit();
+                    },
+                    icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.white54),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete photo',
+                    onPressed: () {
+                      Navigator.pop(context); // close the sheet
+                      onDelete();
+                    },
+                    icon: const Icon(Icons.delete_outline, size: 20, color: Colors.white38),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         );
