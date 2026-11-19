@@ -3,6 +3,10 @@
   "main": "src/index.js",
   "compatibility_date": "2026-11-01",
   "r2_buckets": [
-    { "binding": "PHOTOS", "bucket_name": "album-photos" }
+    { "binding": "PHOTOS", "bucket_name": "album-photos" },
+    { "binding": "LETTERS", "bucket_name": "album-letters" }
   ]
+  
 }
+
+

@@ -1,3 +1,4 @@
+import 'package:frontend/pages/DrawMusic.dart';
 import 'package:frontend/pages/PhotoBook.dart';
 import 'package:frontend/pages/UploadPhotos.dart';
 import 'package:material_ui/material_ui.dart';
@@ -38,6 +39,13 @@ class MenuScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const UploadPhotos()),
               ),
             ),
+            _MenuButton(
+              asset: 'assets/images/blank_button.png',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DrawMusic()),
+              ),
+            ),
           ],
         ),
       ),
@@ -55,7 +63,7 @@ class _MenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width * 0.7;
-
+  
 
     return GestureDetector(
       onTap: onTap,

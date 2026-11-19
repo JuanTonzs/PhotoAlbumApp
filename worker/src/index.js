@@ -1,12 +1,91 @@
+function whoAmI(request, env) {
+  const auth = request.headers.get('Authorization');
+  if (env.TOKEN_BLUE && auth === `Bearer ${env.TOKEN_BLUE}`) return 'blue';
+  if (env.TOKEN_YELLOW && auth === `Bearer ${env.TOKEN_YELLOW}`) return 'yellow';
+  return null;
+}
+
+
 export default {
   async fetch(request, env) {
+    const me = whoAmI(request, env);
+    if (!me) return new Response('Unauthorized', { status: 401 });
+    const other = me === 'blue' ? 'yellow' : 'blue';
     // Every request must carry the shared token
-    if (request.headers.get('Authorization') !== `Bearer ${env.APP_TOKEN}`) {
-      return new Response('Unauthorized', { status: 401 });
-    }
-
+    
     const url = new URL(request.url);
     const path = url.pathname.split('/').filter(Boolean); // e.g. ['photos', id, 'image']
+        // ---------------- Letters ----------------
+    if (path[0] === 'letters') {
+      // GET /letters -> letters I sent or received (without the full text)
+      if (request.method === 'GET' && path.length === 1) {
+        const listed = await env.LETTERS.list({ limit: 1000, include: ['customMetadata'] });
+        const letters = listed.objects
+          .filter((o) => o.customMetadata?.from === me || o.customMetadata?.to === me)
+          .map((o) => ({
+            id: o.key,
+            from: o.customMetadata.from,
+            to: o.customMetadata.to,
+            sentAt: o.customMetadata.sentAt,
+            readAt: o.customMetadata.readAt || null,
+            preview: o.customMetadata.preview ?? '',
+          }));
+        return Response.json(letters);
+      }
+
+      // POST /letters -> send a letter to the other person
+      if (request.method === 'POST' && path.length === 1) {
+        const body = await request.json();
+        const text = typeof body.text === 'string' ? body.text.trim() : '';
+        if (!text) return new Response('Empty letter', { status: 400 });
+
+        const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+        const letter = {
+          id,
+          from: me,
+          to: other,
+          sentAt: new Date().toISOString(),
+          text: text.slice(0, 5000),
+          items: [], // stickers / drawings / photos come in phase 2
+        };
+
+        await env.LETTERS.put(id, JSON.stringify(letter), {
+          httpMetadata: { contentType: 'application/json' },
+          customMetadata: {
+            from: me,
+            to: other,
+            sentAt: letter.sentAt,
+            preview: text.replace(/\s+/g, ' ').slice(0, 80),
+          },
+        });
+        return Response.json({ id }, { status: 201 });
+      }
+
+      // GET /letters/:id -> the full letter (marks it read for the recipient)
+      if (request.method === 'GET' && path.length === 2) {
+        const object = await env.LETTERS.get(path[1]);
+        if (!object) return new Response('Not found', { status: 404 });
+
+        const meta = { ...object.customMetadata };
+        if (meta.from !== me && meta.to !== me) {
+          return new Response('Not found', { status: 404 }); // not your letter
+        }
+
+        const letter = await object.json();
+
+        if (meta.to === me && !meta.readAt) {
+          meta.readAt = new Date().toISOString();
+          await env.LETTERS.put(path[1], JSON.stringify(letter), {
+            httpMetadata: { contentType: 'application/json' },
+            customMetadata: meta,
+          });
+        }
+        return Response.json({ ...letter, readAt: meta.readAt || null });
+      }
+
+      return new Response('Not found', { status: 404 });
+    }
+
     if (path[0] !== 'photos') return new Response('Not found', { status: 404 });
 
     // GET /photos -> list of {id, description, date}

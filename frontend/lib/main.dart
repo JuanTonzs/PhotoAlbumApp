@@ -1,9 +1,17 @@
 import 'package:frontend/MenuScreen.dart';
 import 'package:frontend/Themes/theme.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
+import 'pages/VinylPlayer.dart';
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(const MyApp());
 }
 
@@ -16,7 +24,8 @@ class MyApp extends StatelessWidget {
     
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MenuScreen(),
+      home: MenuScreen(), //Untick this after
+      // home: VinylHomeWidget(),
       theme: buildAlbumTheme(),
     );
   }
