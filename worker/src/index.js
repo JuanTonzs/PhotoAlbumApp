@@ -34,10 +34,18 @@ export default {
       }
 
       // POST /letters -> send a letter to the other person
+      // POST /letters -> send a letter to the other person
       if (request.method === 'POST' && path.length === 1) {
         const body = await request.json();
         const text = typeof body.text === 'string' ? body.text.trim() : '';
-        if (!text) return new Response('Empty letter', { status: 400 });
+        const items = (Array.isArray(body.items) ? body.items : [])
+          .filter((i) => i && ['sticker', 'photo', 'stroke'].includes(i.type))
+          .slice(0, 300);
+
+        if (!text && items.length === 0) return new Response('Empty letter', { status: 400 });
+        if (JSON.stringify(items).length > 800000) {
+          return new Response('Letter too large', { status: 413 });
+        }
 
         const id = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
         const letter = {
@@ -46,7 +54,7 @@ export default {
           to: other,
           sentAt: new Date().toISOString(),
           text: text.slice(0, 5000),
-          items: [], // stickers / drawings / photos come in phase 2
+          items,
         };
 
         await env.LETTERS.put(id, JSON.stringify(letter), {
@@ -55,7 +63,7 @@ export default {
             from: me,
             to: other,
             sentAt: letter.sentAt,
-            preview: text.replace(/\s+/g, ' ').slice(0, 80),
+            preview: (text || '(a decorated letter)').replace(/\s+/g, ' ').slice(0, 80),
           },
         });
         return Response.json({ id }, { status: 201 });

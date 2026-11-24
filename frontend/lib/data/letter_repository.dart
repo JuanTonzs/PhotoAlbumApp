@@ -4,20 +4,34 @@ import 'package:frontend/config.dart';
 import 'package:http/http.dart' as http; 
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/data/letter_items.dart';
 
 
 
 enum Who {
-  blue(label: 'Joaquin', paper: Color(0xFFCDEBFF), envelope: Color(0xFF29A8F0)),
-  yellow(label: 'Jenn', paper: Color(0xFFFFF1B0), envelope: Color(0xFF9BD93C));
+  blue(
+    label: 'Joaquin', 
+    paper: Color(0xFFCDEBFF), 
+    envelope: Color(0xFF29A8F0),
+    envelopeAsset: 'assets/images/envelopes/blue_envelope.gif'
+  ),
+  
+  yellow(
+    label: 'Jenn', 
+    paper: Color(0xFFFFF1B0), 
+    envelope: Color(0xFF9BD93C),
+    envelopeAsset: 'assets/images/envelopes/green_envelope.gif'
+  );
 
 
-  const Who({required this.label, required this.paper, required this.envelope});
+  const Who({required this.label, required this.paper, required this.envelope, required this.envelopeAsset});
 
 
   final String label;
   final Color paper;
   final Color envelope;
+  final String envelopeAsset;
+  
 
 
   Who get other => this == Who.blue ? Who.yellow : Who.blue;
@@ -54,8 +68,10 @@ class Letter {
     required this.readAt,
     required this.preview,
     this.text = '',
+    this.items = const [],
   });
 
+  final List<LetterItem> items;
   final String id;
   final Who from;
   final Who to;
@@ -71,7 +87,11 @@ class Letter {
     sentAt: DateTime.parse(j['sentAt'] as String),
     readAt: j['readAt'] == null ? null : DateTime.parse(j['readAt'] as String),
     preview: (j['preview'] as String?) ?? '',
-    text: (j['text'] as String?) ?? '' 
+    text: (j['text'] as String?) ?? '' ,
+    items: [
+      for (final i in (j['items'] as List? ?? const[]))
+        LetterItem.fromJson(i as Map<String, dynamic>),
+    ]
   );
 
 }
@@ -99,16 +119,32 @@ class LetterRepository {
   }
 
 
-  Future<void> send(String text) async {
+  Future<Letter> get(String id) async {
+    final res = await http
+      .get(Uri.parse('${Config.apiBase}/letters/$id'), headers: _auth)
+      .timeout(_timeout);
+
+    if (res.statusCode != 200) {
+      throw Exception('Could not open letter (${res.statusCode})');
+    }
+
+    return Letter.fromJson(_decode(res) as Map<String, dynamic>);
+  }
+
+
+  Future<void> send(String text, List<LetterItem> items) async {
     final res = await http
       .post(
         Uri.parse('${Config.apiBase}/letters'),
-        headers: {..._auth, 'Content-Type': 'application.json'},
-        body: jsonEncode({'text': text}),
+        headers: {..._auth, 'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'text': text,
+          'items': [for (final i in items) i.toJson()],
+        }),
       ).timeout(_timeout);
 
       if (res.statusCode != 201) {
-        throw Exception('Send Failed (${res.statusCode})');
+        throw Exception('Send Failed (${res.statusCode}) || ${res.body}');
       }
   }
 }

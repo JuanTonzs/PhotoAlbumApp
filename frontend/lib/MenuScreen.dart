@@ -1,4 +1,4 @@
-import 'package:frontend/pages/DrawMusic.dart';
+import 'package:frontend/pages/LettersHome.dart';
 import 'package:frontend/pages/PhotoBook.dart';
 import 'package:frontend/pages/UploadPhotos.dart';
 import 'package:material_ui/material_ui.dart';
@@ -39,13 +39,16 @@ class MenuScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const UploadPhotos()),
               ),
             ),
-            _MenuButton(
-              asset: 'assets/images/blank_button.png',
-              onTap: () => Navigator.push(
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const DrawMusic()),
+                MaterialPageRoute(builder: (_) => const LettersHome()),
               ),
+              child: const Text('Letters'),
             ),
+
+            
           ],
         ),
       ),

@@ -24,6 +24,7 @@ class _LettersHome extends State<LettersHome> {
 
   Future<void> _init() async {
     await Session.load();
+    if(!mounted) return;
     setState(() {
       _loaded = true;
       if (Session.me != null) _future = letterRepository.list();
@@ -73,12 +74,22 @@ class _LettersHome extends State<LettersHome> {
           icon: const Icon(Icons.arrow_back),
         ),
 
+        // REPLACE THE TOP WITH THIS WHEN ASSETS ARE READY
+        // leading: Opacity(
+        //   opacity: unread ? 1.0 : 0.6,
+        //   child: Image.asset(
+        //     letter.from.envelopeAsset,
+        //     width: 64,
+        //     fit: BoxFit.contain,
+        //   ),
+        // ),
+
         title: Text(me == null ? 'Letters' : 'Letters: ${me.label}'),
         actions: [
           if(me != null)
             IconButton(
               tooltip: 'Switch to ${me.other.label}',
-              onPressed: () = > _choose(me.other), 
+              onPressed: () => _choose(me.other), 
               icon: const Icon(Icons.swap_horiz),
             ),
         ],
@@ -142,14 +153,21 @@ class _LettersHome extends State<LettersHome> {
             return ListView(
               children: [
                 SizedBox(height: 200,),
-                Center(child: Text('Could not load letters'),),
-              ],
-            );
+                Center(child: Text('Could not load letters')),
+              ],);
           }
 
           final letters = snap.data!;
           if (letters.isEmpty) {
-            return ListView.builder(
+            return ListView(
+              children: [
+                SizedBox(height: 200,),
+                Center(child: Text('No letters yet. Tap the pen to write one :)'),)
+              ],
+            );
+          }
+
+          return ListView.builder(
               padding: EdgeInsets.only(top: 8, bottom: 88),
               itemCount: letters.length,
               itemBuilder: (_, i) => _LetterTile(
@@ -158,7 +176,8 @@ class _LettersHome extends State<LettersHome> {
                 onTap: () => _open(letters[i])
               )
             );
-          }
+
+          
         }
       )
     );
@@ -183,7 +202,7 @@ class _LetterTile extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      color: Material(
+      child: Material(
         color: Colors.black,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.zero,

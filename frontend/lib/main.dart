@@ -2,7 +2,6 @@ import 'package:frontend/MenuScreen.dart';
 import 'package:frontend/Themes/theme.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'pages/VinylPlayer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -48,4 +48,4 @@ app.*.map.json
 .widget_preview/
 
 config.dart
-gm2.sf2
+assets/SoundFonts/FluidR3.sf2
